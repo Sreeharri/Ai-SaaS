@@ -20,6 +20,7 @@ export const assets = {
     arrow_icon,
 };
 
+
 export const AiToolsData = [
     {
         title: 'AI Article Writer',
