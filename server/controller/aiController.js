@@ -206,53 +206,53 @@ export const generateImage = async (req, res) => {
 
 
 export const removeImageBackground = async (req, res) => {
-  try {
-    const { userId } = req.auth();
-    const image = req.file;
-    const plan = req.plan;
+    try {
+        const { userId } = req.auth();
+        const image = req.file;
+        const plan = req.plan;
 
-    if (plan !== 'premium') {
-      return res.json({
-        success: false,
-        message: "This feature is only available for premium users"
-      });
-    }
-
-    if (!image || !image.path) {
-      return res.status(400).json({
-        success: false,
-        message: 'Image file missing or invalid'
-      });
-    }
-
-    const { secure_url } = await cloudinary.uploader.upload(image.path, {
-      transformation: [
-        {
-          effect: 'background_removal',
-          background_removal: 'remove_the_background'
+        if (plan !== 'premium') {
+            return res.json({
+                success: false,
+                message: "This feature is only available for premium users"
+            });
         }
-      ]
-    });
 
-    await sql`INSERT INTO creations (
+        if (!image || !image.path) {
+            return res.status(400).json({
+                success: false,
+                message: 'Image file missing or invalid'
+            });
+        }
+
+        const { secure_url } = await cloudinary.uploader.upload(image.path, {
+            transformation: [
+                {
+                    effect: 'background_removal',
+                    background_removal: 'remove_the_background'
+                }
+            ]
+        });
+
+        await sql`INSERT INTO creations (
       user_id, prompt, content, type
     ) VALUES (
       ${userId}, 'Remove background from image', ${secure_url}, 'image'
     )`;
 
-    res.json({ success: true, content: secure_url });
+        res.json({ success: true, content: secure_url });
 
-    console.log("✅ Image uploaded:", secure_url);
+        console.log("✅ Image uploaded:", secure_url);
 
-  } catch (error) {
-    console.error("Error stack:", error?.stack);
-    console.error("Error message:", error?.message);
-    if (error?.response) {
-      console.error("Cloudinary response status:", error.response.status);
-      console.error("Cloudinary response data:", error.response.data);
+    } catch (error) {
+        console.error("Error stack:", error?.stack);
+        console.error("Error message:", error?.message);
+        if (error?.response) {
+            console.error("Cloudinary response status:", error.response.status);
+            console.error("Cloudinary response data:", error.response.data);
+        }
+        res.status(500).json({ success: false, message: 'Request failed' });
     }
-    res.status(500).json({ success: false, message: 'Request failed' });
-  }
 };
 
 
@@ -260,7 +260,7 @@ export const removeImageObject = async (req, res) => {
     try {
         const { userId } = req.auth();
         const { object } = req.body;
-        const  image  = req.file;
+        const image = req.file;
         const plan = req.plan;
 
         if (plan !== 'premium') {
@@ -340,15 +340,13 @@ export const resumeReview = async (req, res) => {
 
         // Store creation in DB
         await sql`INSERT INTO creations(
-            user_id, prompt, content, type, 
-        ) VALUES (${userId}, 'Review the uploaded resume' , ${content}, 'resume-review', )`;
+        user_id, prompt, content, type
+        ) VALUES (
+         ${userId}, 'Review the uploaded resume', ${content}, 'resume-review'
+        )`;
 
         res.json({ success: true, content });
 
-        // Send image URL to client
-        res.json({ success: true, content: imageUrl });
-
-        console.log("Image generated and uploaded to Cloudinary:", secure_url);
 
     } catch (error) {
         console.error("Error stack:", error.stack);
